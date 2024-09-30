@@ -10,7 +10,8 @@ class mybooking extends StatefulWidget {
 }
 
 class _mybookingState extends State<mybooking> {
-  List<Map<String, dynamic>> bookings = []; // List to store all bookings with details
+  List<Map<String, dynamic>> bookings =
+      []; // List to store all bookings with details
   bool isLoading = true; // Flag to show loading indicator
 
   @override
@@ -24,101 +25,96 @@ class _mybookingState extends State<mybooking> {
     final userPhoneNumber = prefs.getString('userPhoneNumber');
 
     if (userPhoneNumber != null) {
-      final databaseRef = FirebaseDatabase.instance.ref('serviceBooking/$userPhoneNumber');
+      final databaseRef =
+          FirebaseDatabase.instance.ref('serviceBooking/$userPhoneNumber');
       try {
         final snapshot = await databaseRef.get();
-
         if (snapshot.exists) {
           final data = snapshot.value as Map<Object?, Object?>?;
           if (data != null) {
-            bookings.clear(); // Clear previous data before adding new entries
-
-            // Loop through each booking entry
-            for (var entry in data.entries) {
-              final bookingID = entry.key;
-              final booking = entry.value as Map<Object?, Object?>?;
-              final servicesDetails = booking?['servicesDetails'] as Map<Object?, Object?>?;
-              final cost = booking?['cost'] as Map<Object?, Object?>?;
-
-              if (servicesDetails != null && cost != null) {
-                final services = servicesDetails['services'] as List<dynamic>?;
-                final serviceTime = servicesDetails['serviceTime'] as String?;
-                final serviceDate = servicesDetails['serviceDate'] as String?;
-                final totalAmount = cost['totalAmount'] as int?;
-                final bookingTime = booking?['bookingTime'] as String?;
-                final serviceProvider = booking?['service_provider'] as String?;
-
-                // Fetch the image URL from Firebase
-                String imageUrl = await _getImageUrl(serviceProvider); // Use await here
-
-                if (services != null && totalAmount != null && bookingTime != null) {
-                  bookings.add({
-                    'bookingTime': bookingTime,
-                    'totalAmount': totalAmount,
-                    'serviceTime': serviceTime,
-                    'serviceDate': serviceDate,
-                    'services': services,
-                    'serviceProvider': serviceProvider,
-                    'imageUrl': imageUrl, // Store the image URL directly
-                  });
-                }
-              }
-            }
-
-            setState(() {
-              isLoading = false; // Data fetched, stop loading
-            });
-
-            // Log the bookings for debugging
-            print("Bookings: $bookings");
-          } else {
-            setState(() {
-              bookings = [];
-              isLoading = false; // No data found, stop loading
-            });
+            bookings.clear();
+            await _processBookings(data);
           }
-        } else {
-          setState(() {
-            bookings = [];
-            isLoading = false; // No data found, stop loading
-          });
         }
       } catch (error) {
+        _handleFetchError(error);
+      } finally {
         setState(() {
-          isLoading = false; // Stop loading on error
+          isLoading = false;
         });
-        print('Error fetching data: $error');
       }
     } else {
       setState(() {
-        isLoading = false; // User phone number not found, stop loading
+        isLoading = false;
       });
     }
   }
 
+  Future<void> _processBookings(Map<Object?, Object?> data) async {
+    for (var entry in data.entries) {
+      final bookingID = entry.key;
+      final booking = entry.value as Map<Object?, Object?>?;
+
+      // Check if booking is null before processing it
+      if (booking != null) {
+        String serviceProvider =
+            booking['service_provider'] as String? ?? 'Unknown';
+
+        // Fetch the image URL for the service provider, defaulting to a placeholder if necessary
+        String imageUrl = await _getImageUrl(serviceProvider);
+
+        // Safely add the booking data to the list
+        bookings.add({
+          'serviceProvider': serviceProvider,
+          'bookingTime': booking['bookingTime'] as String? ?? 'Not specified',
+          'serviceTime': booking['serviceTime'] as String? ?? 'Not specified',
+          'totalAmount': booking['totalAmount'] as int? ?? 0,
+          'imageUrl': imageUrl,
+          'services': booking['services'] as List<dynamic>? ?? [],
+          'serviceDate': booking['serviceDate'] as String? ?? 'Not specified',
+        });
+      }
+    }
+  }
+
+  void _handleFetchError(error) {
+    print('Error fetching data: $error');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error fetching bookings')),
+    );
+  }
+
   // Method to get the image URL based on service provider name
   Future<String> _getImageUrl(String? serviceProvider) async {
-    if (serviceProvider == null) return ""; // Handle null service provider
+    if (serviceProvider == null || serviceProvider.isEmpty) {
+      print('Service provider is null or empty');
+      return ""; // Handle null service provider
+    }
 
-    final databaseRef = FirebaseDatabase.instance.ref('assets/images/$serviceProvider');
+    final databaseRef =
+        FirebaseDatabase.instance.ref('assets/images/$serviceProvider');
     String imageUrl = "";
 
     try {
-      final snapshot = await databaseRef.get(); // Use .get() instead of .once()
+      final snapshot = await databaseRef.get();
+      print('Fetching data from:assets/images/$serviceProvider');
       if (snapshot.exists) {
         final data = snapshot.value as Map<Object?, Object?>?;
-        imageUrl = data?['url'] as String? ?? ""; // Access the URL
+        imageUrl = data?['url'] as String? ?? "";
         if (imageUrl.isEmpty) {
-          print('Image URL is empty for $serviceProvider'); // Log if URL is empty
+          print('Image URL is empty for $serviceProvider');
+        } else {
+          print('Image URL found for $serviceProvider:$imageUrl');
         }
       } else {
-        print('Snapshot does not exist for $serviceProvider'); // Log if the snapshot does not exist
+        print(
+            'No snapshot exists for $serviceProvider at path: assets/images/$serviceProvider');
       }
     } catch (error) {
-      print('Error fetching image URL: $error'); // Log any errors
+      print('Error fetching image URL: $error');
     }
 
-    return imageUrl; // Return the fetched image URL
+    return imageUrl;
   }
 
   @override
@@ -126,48 +122,55 @@ class _mybookingState extends State<mybooking> {
     return BaseScaffold(
       title: "My Bookings",
       body: isLoading
-          ? Center(child: CircularProgressIndicator()) // Show loading indicator while fetching data
+          ? Center(child: CircularProgressIndicator())
           : bookings.isNotEmpty
-          ? ListView.builder(
-        itemCount: bookings.length,
-        itemBuilder: (context, index) {
-          final booking = bookings[index];
-
-          return GestureDetector(
-            onTap: () {
-              // Navigate to the detailed booking page
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BookingDetailPage(
-                    serviceProvider: booking['serviceProvider'] as String? ?? '',
-                    selectedService: (booking['services'] as List<dynamic>?)
-                        ?.map((service) => service['name'] as String?)
-                        .where((name) => name != null) // Filter out null names
-                        .join(", ") ?? '', // Join service names
-                    serviceDate: booking['serviceDate'] as String? ?? '',
-                    serviceTime: booking['serviceTime'] as String? ?? '',
-                    totalCost: (booking['totalAmount'] as int?)?.toDouble() ?? 0.0, bookingTime: '', services: [],
-                  ),
-                ),
-              );
-            },
-            child: BookingCard(
-              serviceProvider: booking['serviceProvider'],
-              bookingTime: booking['bookingTime'],
-              serviceTime: booking['serviceTime'],
-              totalCost: booking['totalAmount'].toDouble(),
-              imageUrl: booking['imageUrl'], // Use the image URL from bookings
-            ),
-          );
-        },
-      )
-          : Center(
-        child: const Text(
-          "No bookings yet",
-          style: TextStyle(fontSize: 18, color: Colors.grey),
-        ),
-      ),
+              ? ListView.builder(
+                  itemCount: bookings.length,
+                  itemBuilder: (context, index) {
+                    final booking = bookings[index];
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingDetailPage(
+                            serviceProvider:
+                                booking['serviceProvider'] as String? ??
+                                    'Unknown',
+                            selectedService: (booking['services']
+                                        as List<dynamic>?)
+                                    ?.map((service) =>
+                                        service['name'] as String? ?? 'Unknown')
+                                    .join(", ") ??
+                                'No services',
+                            serviceDate: booking['serviceDate'] as String? ??
+                                'Not specified',
+                            serviceTime: booking['serviceTime'] as String? ??
+                                'Not specified',
+                            totalCost:
+                                (booking['totalAmount'] as int?)?.toDouble() ??
+                                    0.0,
+                            bookingTime:
+                                booking['bookingTime'] as String? ?? 'Unknown',
+                            services: booking['services'] ?? [],
+                          ),
+                        ),
+                      ),
+                      child: BookingCard(
+                        serviceProvider:
+                            booking['serviceProvider'] as String? ?? 'Unknown',
+                        bookingTime:
+                            booking['bookingTime'] as String? ?? 'Unknown',
+                        serviceTime:
+                            booking['serviceTime'] as String? ?? 'Unknown',
+                        totalCost:
+                            (booking['totalAmount'] as int?)?.toDouble() ?? 0.0,
+                        imageUrl: booking['imageUrl'] as String? ??
+                            'https://via.placeholder.com/90',
+                      ),
+                    );
+                  },
+                )
+              : Center(child: Text("No bookings yet")),
     );
   }
 }

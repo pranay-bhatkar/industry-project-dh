@@ -136,7 +136,7 @@ class _BillSummaryPageState extends State<BillSummaryPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20.0),
-                child: Image.asset(
+                child: Image.network(
                   widget.serviceImagePath,
                   height: 150,
                   width: double.infinity,

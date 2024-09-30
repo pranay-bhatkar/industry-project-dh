@@ -142,7 +142,7 @@ class _ElectricianBookingPageState extends State<ElectricianBookingPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20.0),
-                child: Image.asset(
+                child: Image.network(
                   widget.serviceImagePath,
                   height: 200,
                   width: double.infinity,
@@ -166,7 +166,7 @@ class _ElectricianBookingPageState extends State<ElectricianBookingPage> {
                 final serviceItem = widget.serviceOptions[index];
 
                 // Check if the service item is "Clothes", "Turf", or "Club"
-                bool isClothesService = (serviceItem.name == 'Clothes');
+                bool isClothesService = (serviceItem.name == 'Wash and Iron');
                 bool isTurfService = (serviceItem.name == 'Turf Booking');
                 bool isClubService = (serviceItem.name == 'Club Membership');
 
