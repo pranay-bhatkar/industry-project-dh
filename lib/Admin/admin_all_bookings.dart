@@ -11,6 +11,28 @@ class _AdminAllBookingState extends State<AdminAllBooking> {
   List<Map<String, dynamic>> allBookings = []; // List to store all bookings
   bool isLoading = true; // Flag to show loading indicator
 
+  // Map for storing specific image URLs for each service provider
+  Map<String, String> serviceProviderImageUrls = {
+    'Electrician':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217108.jpg?alt=media&token=b77f7549-74ef-49c9-ad77-26e0eb94aa52',
+    'Plumber':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217096.jpg?alt=media&token=d41ecdf4-fc91-427d-8429-2ec4e4ba015f',
+    'Househelp':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217106.jpg?alt=media&token=d6ceb594-ed38-42d4-b351-eb13184132d9',
+    'Laundry':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217092.jpg?alt=media&token=0c9b7b90-30d4-4657-8ddd-c065839de97c',
+    'Gardener':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217089.jpg?alt=media&token=f17fc776-58ce-4abe-9967-5379131f6f8c',
+    'Grocery':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217109.jpg?alt=media&token=952144b4-1589-410a-8e53-16629c554238',
+    'Bicycle Booking':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217101.jpg?alt=media&token=b05deb6c-f9d9-4fe0-8857-00dd186d6668',
+    'Local Transport':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217098.jpg?alt=media&token=1b8b70e9-29d3-430f-86fa-b35b947f1903',
+    'Turf & Club':
+        'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2F1001217103.jpg?alt=media&token=206fe6c6-3f94-4e34-a30d-2c7eccf41ca5',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +53,7 @@ class _AdminAllBookingState extends State<AdminAllBooking> {
           data.forEach((userPhoneNumber, bookingsData) {
             final bookingsList = bookingsData as Map<Object?, Object?>?;
 
-            bookingsList?.forEach((bookingID, bookingDetails) async {
+            bookingsList?.forEach((bookingID, bookingDetails) {
               final booking = bookingDetails as Map<Object?, Object?>?;
               final servicesDetails =
                   booking != null && booking['servicesDetails'] is Map
@@ -53,8 +75,9 @@ class _AdminAllBookingState extends State<AdminAllBooking> {
                 final serviceProvider =
                     booking?['service_provider'] as String? ?? "Unknown";
 
-                // Fetch the image URL from Firebase asynchronously
-                String imageUrl = await _getImageUrl(serviceProvider);
+                // Get the specific image URL for the service provider
+                String imageUrl =
+                    serviceProviderImageUrls[serviceProvider] ?? '';
 
                 if (services.isNotEmpty &&
                     totalAmount > 0 &&
@@ -67,7 +90,7 @@ class _AdminAllBookingState extends State<AdminAllBooking> {
                       'serviceDate': serviceDate,
                       'services': services,
                       'serviceProvider': serviceProvider,
-                      'imageUrl': imageUrl, // Store the image URL directly
+                      'imageUrl': imageUrl, // Use the static image URL
                     });
                   });
                 }
@@ -96,38 +119,6 @@ class _AdminAllBookingState extends State<AdminAllBooking> {
       });
       print('Error fetching data: $error');
     }
-  }
-
-  Future<String> _getImageUrl(String? serviceProvider) async {
-    if (serviceProvider == null || serviceProvider.isEmpty) {
-      print('Service provider is null or empty');
-      return ""; // Handle null service provider
-    }
-
-    final databaseRef =
-        FirebaseDatabase.instance.ref('assets/images/$serviceProvider');
-    String imageUrl = "";
-
-    try {
-      final snapshot = await databaseRef.get();
-      print('Fetching data from:assets/images/$serviceProvider');
-      if (snapshot.exists) {
-        final data = snapshot.value as Map<Object?, Object?>?;
-        imageUrl = data?['url'] as String? ?? "";
-        if (imageUrl.isEmpty) {
-          print('Image URL is empty for $serviceProvider');
-        } else {
-          print('Image URL found for $serviceProvider:$imageUrl');
-        }
-      } else {
-        print(
-            'No snapshot exists for $serviceProvider at path: assets/images/$serviceProvider');
-      }
-    } catch (error) {
-      print('Error fetching image URL: $error');
-    }
-
-    return imageUrl;
   }
 
   @override
@@ -184,15 +175,34 @@ class _AdminAllBookingState extends State<AdminAllBooking> {
                               ),
                             ),
                             SizedBox(width: 16),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10.0),
-                              child: Image.network(
-                                booking['imageUrl'].isEmpty
-                                    ? 'https://via.placeholder.com/90'
-                                    : booking['imageUrl'],
-                                width: 90,
-                                height: 90,
-                                fit: BoxFit.cover,
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: Colors.black,
+                                    width: 2), // Border color and width
+                                borderRadius:
+                                    BorderRadius.circular(10), // Border radius
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10.0),
+                                child: Image.network(
+                                  alignment: Alignment.bottomRight,
+                                  booking['imageUrl'].isEmpty
+                                      ? 'https://via.placeholder.com/90'
+                                      : booking['imageUrl'],
+                                  width: 110,
+                                  height: 110,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (BuildContext context,
+                                      Object error, StackTrace? stackTrace) {
+                                    return Image.network(
+                                      'https://via.placeholder.com/90',
+                                      width: 110,
+                                      height: 110,
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ],

@@ -59,7 +59,7 @@ class SideNavigationBar extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => mybooking(),
+                    builder: (context) => MyBooking(),
                   ),
                 );
               },
