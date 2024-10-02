@@ -1,13 +1,14 @@
+import 'package:dh/Food/food_menu_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'Admin/admin_all_bookings.dart';
 import 'Emergency_call/emergancy_call_page.dart';
-import 'homescreen.dart'; // Import your home screen
-import 'services.dart'; // Import your service screen
-import 'mybookings.dart'; // Import your my bookings screen
-import 'service_item.dart'; // Import your ServiceItem model
-import 'signin.dart'; // Import your sign-in screen
 import 'basescaffold.dart'; // Import your BaseScaffold
+import 'homescreen.dart'; // Import your home screen
+import 'mybookings.dart'; // Import your my bookings screen
+import 'services.dart'; // Import your service screen
+import 'signin.dart'; // Import your sign-in screen
 
 class SideNavigationBar extends StatelessWidget {
   const SideNavigationBar({Key? key}) : super(key: key);
@@ -49,6 +50,16 @@ class SideNavigationBar extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => ServicesScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.restaurant),
+              title: const Text('Food Section'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => FoodMenuPage()),
                 );
               },
             ),
