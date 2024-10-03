@@ -1,3 +1,4 @@
+import 'package:dh/Food/food_call_book.dart';
 import 'package:dh/Food/food_menu_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,7 +60,7 @@ class SideNavigationBar extends StatelessWidget {
               onTap: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => FoodMenuPage()),
+                  MaterialPageRoute(builder: (context) => FoodCallBookPage()),
                 );
               },
             ),

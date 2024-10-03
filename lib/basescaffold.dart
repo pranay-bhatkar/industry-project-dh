@@ -10,7 +10,8 @@ class BaseScaffold extends StatelessWidget {
     Key? key,
     required this.title,
     this.appBarActions,
-    required this.body,
+    required this.body, 
+    FloatingActionButton? floatingActionButton,
   }) : super(key: key);
 
   @override
