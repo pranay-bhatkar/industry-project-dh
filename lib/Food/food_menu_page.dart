@@ -1,4 +1,5 @@
 import 'package:dh/Food/food_bill_summery.dart';
+import 'package:dh/Food/food_date_time_picker_page.dart';
 import 'package:dh/basescaffold.dart';
 import 'package:flutter/material.dart';
 
@@ -24,21 +25,6 @@ class _FoodMenuPageState extends State<FoodMenuPage> {
       'price': '\₹ 15.99',
       'imagePath':
           'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2Fgrilledsalmon.png?alt=media&token=33932dcf-a20a-41d8-8776-94791842cbed',
-    },
-    {
-      'title': 'Chocolate Cake',
-      'description':
-          'Rich and moist chocolate cake with a creamy ganache topping.',
-      'price': '\₹ 6.99',
-      'imagePath':
-          'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2Fchocolatecake.png?alt=media&token=3ebe7ac1-a772-439b-a08e-3e8646108620',
-    },
-    {
-      'title': 'Mojito',
-      'description': 'Classic mojito with fresh mint, lime, and soda water.',
-      'price': '\₹ 5.99',
-      'imagePath':
-          'https://firebasestorage.googleapis.com/v0/b/doodleshomes-7ffe2.appspot.com/o/images%2Fmojito.png?alt=media&token=7e1f00fb-e3c2-4385-b0cc-034cec26d156',
     },
     {
       'title': 'Chocolate Cake',
@@ -125,6 +111,9 @@ class _FoodMenuPageState extends State<FoodMenuPage> {
   TextEditingController _searchController = TextEditingController();
   Map<String, bool> _expandedState = {}; // Expanded state for each item
   bool isCartActive = false; // Track if cart has items
+
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
 
   final List<String> categories = [
     'All',
@@ -298,14 +287,11 @@ class _FoodMenuPageState extends State<FoodMenuPage> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => FoodBillSummeryPage(
-                              cartItems: cartItems,
-                              bookingDateTime: '',
-                            )),
+                        builder: (context) => DateTimePickerPage()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

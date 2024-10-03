@@ -2,22 +2,45 @@ import 'package:flutter/material.dart';
 
 class FoodBillSummeryPage extends StatelessWidget {
   final List<Map<String, dynamic>> cartItems;
-  final String bookingDateTime;
+  final String? bookingDateTime;
+  final DateTime? date;
+  final TimeOfDay? time;
 
-  FoodBillSummeryPage({required this.cartItems, required this.bookingDateTime});
+  FoodBillSummeryPage({
+    required this.cartItems,
+    this.bookingDateTime,
+    this.date,
+    this.time,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Initialize totalCost
     double totalCost = 0;
+
+    // Check if cartItems is null or empty
+    // if (cartItems == null || cartItems.isEmpty) {
+    //   return Scaffold(
+    //     appBar: AppBar(
+    //       title: Text('Bill Summary'),
+    //       backgroundColor: Colors.redAccent,
+    //     ),
+    //     body: Center(child: Text('No items in the cart')),
+    //   );
+    // }
+
+    // Calculate totalCost only if cartItems is not null
     cartItems.forEach((item) {
       totalCost +=
           double.parse(item['price'].replaceAll('₹ ', '')) * item['quantity'];
     });
 
-    // Calculate GST (for example, at 5%)
-    double gst = totalCost * 0.05;
-    double grandTotal = totalCost + gst;
+    // Calculate GST and grand total
+    const double gstPercentage = 0.18; // 18%
+    double gstAmount = totalCost * gstPercentage;
+    double grandTotal = totalCost + gstAmount;
 
+    // Build UI
     return Scaffold(
       appBar: AppBar(
         title: Text('Bill Summary'),
@@ -28,18 +51,15 @@ class FoodBillSummeryPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Booking Date: ${bookingDateTime.split(" ")[0]}', // Only date
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Booking Time: ${bookingDateTime.split(" ")[1]}', // Only time
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
+            Text(
+              'Booking Date & Time:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 4),
+            Text(
+              bookingDateTime ??
+                  'Date and Time not selected', // Handle null bookingDateTime
+              style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
             Text(
@@ -56,7 +76,8 @@ class FoodBillSummeryPage extends StatelessWidget {
                     title: Text(item['title']),
                     subtitle: Text('Quantity: ${item['quantity']}'),
                     trailing: Text(
-                        'Total: ₹${(double.parse(item['price'].replaceAll('₹ ', '')) * item['quantity']).toStringAsFixed(2)}'),
+                      'Total: ₹${(double.parse(item['price'].replaceAll('₹ ', '')) * item['quantity']).toStringAsFixed(2)}',
+                    ),
                   );
                 },
               ),
@@ -84,11 +105,11 @@ class FoodBillSummeryPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'GST (5%):',
+                    'GST (18%):',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    '₹${gst.toStringAsFixed(2)}',
+                    '₹${gstAmount.toStringAsFixed(2)}',
                     style: TextStyle(fontSize: 18, color: Colors.green),
                   ),
                 ],
@@ -111,22 +132,43 @@ class FoodBillSummeryPage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-            Center(
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Proceed to Payment or Confirmation
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    textStyle:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  child: Text('Confirm Order'),
+            SizedBox(
+              width: double.infinity, // Make button full width
+              child: ElevatedButton(
+                onPressed: () {
+                  // Show a confirmation dialog or navigate to payment
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Confirm Order'),
+                      content:
+                          Text('Are you sure you want to confirm this order?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close the dialog
+                          },
+                          child: Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close the dialog
+                            Navigator.pop(
+                                context); // Or navigate to payment screen
+                          },
+                          child: Text('Confirm'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  textStyle:
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+                child: Text('Confirm Order'),
               ),
             ),
           ],
